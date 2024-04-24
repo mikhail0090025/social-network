@@ -1,22 +1,10 @@
 const http = require("http");
 const fs = require("fs");
-const mysql = require("mysql");
 const mainClasses = require("./mainClasses");
 const User = mainClasses.UserClass;
+const mysql = require("./mysql.js");
+const crypto = require("crypto");
 
-var connection = mysql.createConnection({
-    host     : 'localhost',
-    user     : 'root',
-    password : '',
-    database: "newdb"
-  });
-  connection.connect();
-  connection.query("SELECT * FROM Person", function (error, result) {
-    if(error) console.log(error);
-    else{
-        console.log(result);
-    }
-  });
 http.createServer(function (request, response) {
     console.log(request.method);
 
@@ -49,9 +37,21 @@ http.createServer(function (request, response) {
                 console.log("Birthday:", birthday);
 
                 const birthday_ = new Date(birthday);
-                var newUser = new User(username, password, birthday_);
-                console.log(newUser);
-                AddUser(newUser);
+                var hash = crypto.createHash('sha256');
+                hash.update(password);
+                var newUser = [
+                    username,
+                    hash.digest("hex"),
+                    birthday,
+                    ""
+                ];
+                
+                mysql.req2("INSERT INTO person (NAME, Password, Birthday, Bio) VALUES (?,?,?,?)", newUser, function (err, results) {
+                    if(err) console.error(err);
+                    else {
+                        console.log(results);
+                    }
+                });                
             });
             break;
         default:
