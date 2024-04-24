@@ -1,8 +1,22 @@
 const http = require("http");
 const fs = require("fs");
+const mysql = require("mysql");
 const mainClasses = require("./mainClasses");
 const User = mainClasses.UserClass;
 
+var connection = mysql.createConnection({
+    host     : 'localhost',
+    user     : 'root',
+    password : '',
+    database: "newdb"
+  });
+  connection.connect();
+  connection.query("SELECT * FROM Person", function (error, result) {
+    if(error) console.log(error);
+    else{
+        console.log(result);
+    }
+  });
 http.createServer(function (request, response) {
     console.log(request.method);
 
@@ -36,11 +50,8 @@ http.createServer(function (request, response) {
 
                 const birthday_ = new Date(birthday);
                 var newUser = new User(username, password, birthday_);
-                try {
-                    AddUser(newUser);
-                } catch (error) {
-                    console.error(error);
-                }
+                console.log(newUser);
+                AddUser(newUser);
             });
             break;
         default:
@@ -55,18 +66,6 @@ http.createServer(function (request, response) {
 
 function AddUser(user){
     if(!(user instanceof User)) throw new Error("Not user object was given");
-    fs.readFile("users.txt", function(error, data){
-        if(error) {
-            console.error(error);
-        }
-        else{
-            console.log(data);
-            var users = JSON.stringify(data);
-            if(users.some(user_ => user_.username === user.username)) throw new Error("User with username " + user.username + " already exists");
-            users.push(user);
-            SaveUsers(users);
-        }
-    });
 }
 
 function SaveUsers(usersList) {
